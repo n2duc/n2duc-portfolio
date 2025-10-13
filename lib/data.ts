@@ -7,7 +7,7 @@ export const siteConfig = {
   description: "I build fast, accessible, and delightful web experiences.",
   location: "Da Nang, VN",
   email: "n2duc.dev.work@gmail.com",
-  url: "https://n2duc.dev",
+  url: "https://n2duc.cloud",
   ogImage: "/og-default.png",
   links: {
     github: "https://github.com/n2duc",
