@@ -1,0 +1,333 @@
+---
+title: "Mastering Core Web Vitals in 2025"
+description: "A comprehensive guide to optimizing LCP, FID, and CLS for better user experience and SEO rankings."
+date: "2024-12-15"
+tags: ["Performance", "Web Vitals", "SEO", "UX"]
+author: "Nguyen Ngoc Duc"
+image: "/blog/web-vitals-hero.jpg"
+---
+
+## Introduction
+
+Core Web Vitals have become crucial ranking factors for Google and essential metrics for user experience. In this comprehensive guide, I'll share proven strategies to achieve excellent scores across all three metrics: LCP, FID (now INP), and CLS.
+
+## Understanding Core Web Vitals
+
+### Largest Contentful Paint (LCP)
+
+**Target:** < 2.5 seconds
+
+LCP measures loading performance—specifically, how long it takes for the largest content element to become visible.
+
+**Common Issues:**
+- Slow server response times
+- Render-blocking resources
+- Large, unoptimized images
+- Client-side rendering delays
+
+### First Input Delay (FID) / Interaction to Next Paint (INP)
+
+**Target:** < 100ms (FID) / < 200ms (INP)
+
+Measures responsiveness—the time between user interaction and browser response.
+
+**Common Issues:**
+- Heavy JavaScript execution
+- Long tasks blocking main thread
+- Unoptimized event handlers
+- Large bundle sizes
+
+### Cumulative Layout Shift (CLS)
+
+**Target:** < 0.1
+
+Measures visual stability—how much content shifts unexpectedly during page load.
+
+**Common Issues:**
+- Images without dimensions
+- Ads, embeds, or iframes without reserved space
+- Dynamically injected content
+- Web fonts causing FOIT/FOUT
+
+## Optimizing LCP
+
+### 1. Optimize Server Response Time (TTFB)
+
+```javascript
+// Use Edge Functions for faster response
+export const config = {
+  runtime: 'edge',
+};
+
+export default async function handler(req) {
+  // Your logic here
+  return new Response('Hello World');
+}
+```
+
+### 2. Implement Smart Image Loading
+
+```tsx
+import Image from 'next/image';
+
+export function Hero() {
+  return (
+    <Image
+      src="/hero.jpg"
+      alt="Hero image"
+      width={1200}
+      height={600}
+      priority // Load immediately for above-fold images
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,..."
+    />
+  );
+}
+```
+
+### 3. Preload Critical Resources
+
+```html
+<!-- In your <head> -->
+<link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hero.jpg" as="image">
+```
+
+### 4. Use Modern Image Formats
+
+```javascript
+// Next.js automatically serves WebP/AVIF when supported
+export default {
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+};
+```
+
+## Optimizing INP/FID
+
+### 1. Reduce JavaScript Bundle Size
+
+```javascript
+// Use dynamic imports for non-critical code
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <Skeleton />,
+});
+
+// Code splitting by route
+const Analytics = dynamic(() => import('./Analytics'), {
+  ssr: false,
+});
+```
+
+### 2. Optimize Long Tasks
+
+```typescript
+// Break up long tasks with scheduler API
+async function processLargeDataset(data: any[]) {
+  const chunks = chunkArray(data, 100);
+  
+  for (const chunk of chunks) {
+    await scheduler.yield(); // Let browser handle other tasks
+    processChunk(chunk);
+  }
+}
+```
+
+### 3. Use Web Workers
+
+```typescript
+// offload-heavy-work.worker.ts
+self.addEventListener('message', (e) => {
+  const result = heavyComputation(e.data);
+  self.postMessage(result);
+});
+
+// main-thread.ts
+const worker = new Worker('./offload-heavy-work.worker.ts');
+worker.postMessage(data);
+worker.onmessage = (e) => {
+  updateUI(e.data);
+};
+```
+
+## Optimizing CLS
+
+### 1. Always Set Image Dimensions
+
+```tsx
+// ❌ Bad - causes layout shift
+<img src="/image.jpg" alt="..." />
+
+// ✅ Good - reserves space
+<img 
+  src="/image.jpg" 
+  alt="..."
+  width={800}
+  height={600}
+/>
+
+// ✅ Better - with Next.js Image
+<Image
+  src="/image.jpg"
+  alt="..."
+  width={800}
+  height={600}
+/>
+```
+
+### 2. Reserve Space for Ads/Embeds
+
+```css
+.ad-container {
+  min-height: 250px; /* Reserve space before ad loads */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+```
+
+### 3. Optimize Font Loading
+
+```css
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter.woff2') format('woff2');
+  font-display: optional; /* Prevents FOUT/FOIT */
+}
+```
+
+```tsx
+// With next/font
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+});
+```
+
+### 4. Avoid Inserting Content Above Existing Content
+
+```typescript
+// ❌ Bad - pushes content down
+function BadNewsletter() {
+  const [shown, setShown] = useState(false);
+  
+  useEffect(() => {
+    setTimeout(() => setShown(true), 2000);
+  }, []);
+  
+  return (
+    <>
+      {shown && <NewsletterBanner />}
+      <MainContent />
+    </>
+  );
+}
+
+// ✅ Good - uses fixed positioning
+function GoodNewsletter() {
+  return (
+    <>
+      <NewsletterBanner className="fixed top-0" />
+      <MainContent className="mt-16" /> {/* Space already reserved */}
+    </>
+  );
+}
+```
+
+## Real-World Example: Optimizing an E-Commerce Site
+
+Here's how I improved an e-commerce site's Core Web Vitals:
+
+### Before Optimization
+- LCP: 5.2s
+- FID: 280ms
+- CLS: 0.18
+
+### Changes Made
+
+1. **Implemented Image Optimization**
+   - Converted to WebP/AVIF
+   - Added responsive images
+   - Implemented lazy loading for below-fold images
+
+2. **Reduced JavaScript**
+   - Removed unused dependencies (saved 180KB)
+   - Implemented code splitting
+   - Moved analytics to Web Worker
+
+3. **Fixed Layout Shifts**
+   - Added dimensions to all images
+   - Reserved space for lazy-loaded content
+   - Optimized font loading strategy
+
+### After Optimization
+- LCP: 1.2s (-77%)
+- FID: 45ms (-84%)
+- CLS: 0.02 (-89%)
+
+**Business Impact:**
+- 120% increase in conversion rate
+- 38% decrease in bounce rate
+- Moved from page 3 to page 1 in search results
+
+## Monitoring & Tools
+
+### Essential Tools
+
+1. **Lighthouse CI** - Automated performance testing
+2. **Web Vitals Library** - Real user monitoring
+3. **Chrome DevTools** - Local debugging
+4. **WebPageTest** - Detailed analysis
+5. **Vercel Analytics** - Production monitoring
+
+### Implementing RUM (Real User Monitoring)
+
+```typescript
+import { onCLS, onFID, onLCP } from 'web-vitals';
+
+function sendToAnalytics({ name, delta, id }) {
+  // Send to your analytics endpoint
+  fetch('/api/analytics', {
+    method: 'POST',
+    body: JSON.stringify({ name, delta, id }),
+  });
+}
+
+onCLS(sendToAnalytics);
+onFID(sendToAnalytics);
+onLCP(sendToAnalytics);
+```
+
+## Best Practices Checklist
+
+<Callout type="info">
+**Quick Wins:**
+- ✅ Enable compression (gzip/brotli)
+- ✅ Use a CDN
+- ✅ Optimize images (format, size, lazy loading)
+- ✅ Minimize CSS/JS
+- ✅ Implement caching strategy
+- ✅ Use modern image formats (WebP/AVIF)
+- ✅ Preload critical resources
+- ✅ Set explicit dimensions for media
+</Callout>
+
+## Conclusion
+
+Optimizing Core Web Vitals is an ongoing process, not a one-time task. Focus on:
+
+1. **Measure regularly** - Track metrics in production
+2. **Prioritize user experience** - Metrics should reflect real user pain points
+3. **Test on real devices** - Lab data doesn't tell the whole story
+4. **Iterate continuously** - Performance is a feature that needs maintenance
+
+By following these strategies, you can achieve excellent Core Web Vitals scores, improve SEO rankings, and most importantly, provide a better experience for your users.
+
+---
+
+**Want to discuss performance optimization?** [Get in touch](/contact) - I'd love to hear about your challenges and successes!
+

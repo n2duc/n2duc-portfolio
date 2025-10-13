@@ -1,0 +1,133 @@
+---
+title: "E-Commerce Platform"
+description: "A modern, high-performance e-commerce platform built with Next.js and Stripe integration. Achieved 98 Lighthouse score and increased conversions by 120%."
+image: "/projects/ecommerce-hero.jpg"
+date: "2024-08-15"
+tags: ["Next.js", "TypeScript", "Stripe", "Tailwind CSS", "PostgreSQL"]
+role: "Lead Frontend Developer"
+stack: ["Next.js 14", "TypeScript", "Stripe API", "Tailwind CSS", "PostgreSQL", "Vercel"]
+demoUrl: "https://demo-ecommerce.example.com"
+repoUrl: "https://github.com/n2duc/ecommerce-platform"
+featured: true
+---
+
+## Project Overview
+
+Built a full-featured e-commerce platform for a growing retail brand, focusing on performance, accessibility, and conversion optimization. The platform handles thousands of transactions monthly and provides a seamless shopping experience across all devices.
+
+## Challenge
+
+The client's existing platform was slow, outdated, and had a poor mobile experience. Cart abandonment rates were high (72%), and the site struggled with Core Web Vitals, resulting in lower search rankings.
+
+### Key Issues:
+- Poor Lighthouse scores (45 Performance, 68 Accessibility)
+- Slow page load times (5.2s LCP)
+- High cart abandonment rate (72%)
+- Non-responsive design
+- Complex checkout flow
+
+## Solution
+
+Rebuilt the platform from scratch using modern technologies and performance-first architecture.
+
+### Technical Approach
+
+**Performance Optimization:**
+- Implemented Next.js App Router for optimal code splitting
+- Used Server Components to reduce client-side JavaScript
+- Optimized images with next/image (AVIF/WebP)
+- Implemented smart prefetching for product pages
+- CDN caching strategy for static assets
+
+**User Experience:**
+- Simplified checkout flow from 5 steps to 3
+- Added guest checkout option
+- Implemented real-time inventory updates
+- Progressive image loading with blur placeholders
+- Skeleton screens for better perceived performance
+
+**Accessibility:**
+- WCAG 2.1 AA compliance
+- Keyboard navigation throughout
+- Screen reader optimization
+- High contrast mode support
+- Focus management for modals and drawdowns
+
+## Results
+
+The new platform exceeded all expectations:
+
+<Callout type="success">
+- **+120% conversion rate** (from 2.1% to 4.6%)
+- **-38% cart abandonment** (from 72% to 44%)
+- **98 Lighthouse score** (up from 45)
+- **1.2s LCP** (down from 5.2s)
+- **+156% mobile traffic** due to better mobile experience
+</Callout>
+
+### Performance Metrics
+
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Lighthouse Performance | 45 | 98 | +118% |
+| LCP | 5.2s | 1.2s | -77% |
+| FID | 280ms | 45ms | -84% |
+| CLS | 0.18 | 0.02 | -89% |
+
+## Tech Stack
+
+- **Frontend:** Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Backend:** Next.js API Routes, PostgreSQL
+- **Payment:** Stripe Checkout & Payment Intents
+- **Search:** Algolia
+- **Analytics:** Google Analytics 4, Vercel Analytics
+- **Hosting:** Vercel (Edge Network)
+
+## Key Features
+
+### Product Catalog
+- Advanced filtering and search
+- Quick view modal
+- Variant selection (size, color)
+- Related products recommendations
+- Wishlist functionality
+
+### Shopping Cart
+- Persistent cart (localStorage + database sync)
+- Real-time inventory validation
+- Promo code support
+- Shipping calculator
+- Save for later option
+
+### Checkout
+- Guest and authenticated checkout
+- Multiple payment methods
+- Address autocomplete
+- Order tracking
+- Email notifications
+
+### Admin Dashboard
+- Product management
+- Order processing
+- Analytics dashboard
+- Inventory management
+- Customer support tools
+
+## Lessons Learned
+
+1. **Performance is a feature** - The dramatic improvement in Core Web Vitals directly correlated with increased conversions.
+
+2. **Progressive enhancement matters** - Building a solid baseline experience first, then enhancing with JavaScript, ensured the site worked for everyone.
+
+3. **Testing with real users** - User testing revealed that our original 5-step checkout was the main friction point.
+
+4. **Monitoring is crucial** - Real-time monitoring helped us catch and fix issues before they impacted customers.
+
+## Future Enhancements
+
+- AI-powered product recommendations
+- Virtual try-on for certain product categories
+- Multi-language support
+- Subscription management
+- Advanced analytics dashboard
+

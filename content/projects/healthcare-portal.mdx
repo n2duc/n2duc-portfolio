@@ -1,0 +1,172 @@
+---
+title: "Healthcare Patient Portal"
+description: "HIPAA-compliant patient portal with real-time appointment scheduling and secure messaging. Built with accessibility-first approach."
+image: "/projects/healthcare-hero.jpg"
+date: "2024-05-20"
+tags: ["React", "Node.js", "PostgreSQL", "WebSocket", "HIPAA"]
+role: "Full Stack Developer"
+stack: ["React", "Node.js", "Express", "PostgreSQL", "Socket.io", "AWS"]
+demoUrl: "https://healthcare-demo.example.com"
+featured: true
+---
+
+## Project Overview
+
+Developed a comprehensive patient portal for a healthcare network serving 50,000+ patients. The platform enables patients to manage appointments, communicate with healthcare providers, access medical records, and more—all while maintaining strict HIPAA compliance.
+
+## Challenge
+
+The healthcare network needed a modern, secure platform to improve patient engagement and reduce administrative overhead. The existing system was outdated, lacked mobile support, and had poor accessibility.
+
+### Requirements:
+- Full HIPAA compliance
+- Real-time features (messaging, notifications)
+- Accessibility (WCAG 2.1 AA)
+- Multi-factor authentication
+- Audit logging
+- Mobile-first design
+
+## Solution
+
+Built a secure, accessible web application with real-time capabilities and comprehensive security measures.
+
+### Security & Compliance
+
+**HIPAA Compliance:**
+- End-to-end encryption for all patient data
+- Comprehensive audit logging
+- Role-based access control (RBAC)
+- Automatic session timeouts
+- PHI data encryption at rest and in transit
+- Regular security audits
+
+**Authentication:**
+- Multi-factor authentication (MFA)
+- Biometric support (Touch ID/Face ID)
+- Session management
+- Password policies enforcement
+
+### Core Features
+
+**Appointment Management:**
+- Real-time availability checking
+- Provider filtering and search
+- Appointment reminders (email, SMS)
+- Virtual visit support (video calls)
+- Cancellation and rescheduling
+
+**Secure Messaging:**
+- Real-time chat with providers
+- File attachments (lab results, images)
+- Read receipts
+- Message encryption
+- Conversation threading
+
+**Medical Records:**
+- Access to test results
+- Prescription history
+- Visit summaries
+- Document downloads (PDF)
+- Health timeline visualization
+
+**Accessibility Features:**
+- Screen reader optimized
+- Keyboard navigation
+- High contrast mode
+- Adjustable font sizes
+- ARIA labels throughout
+
+## Results
+
+<Callout type="success">
+- **45% reduction** in phone call volume
+- **92% patient satisfaction** rating
+- **100% HIPAA compliance** certification
+- **98 Accessibility score** (Lighthouse)
+- **30% increase** in appointment bookings
+</Callout>
+
+### Impact Metrics
+
+- Average response time: < 2 hours
+- Appointment no-show rate: Reduced by 35%
+- Patient engagement: +67%
+- Administrative time saved: 15 hours/week per office
+
+## Technical Implementation
+
+### Architecture
+
+```
+Frontend (React)
+├── Real-time updates (Socket.io)
+├── State management (Redux)
+├── Form validation (Zod)
+└── Accessibility (React Aria)
+
+Backend (Node.js/Express)
+├── RESTful API
+├── WebSocket server
+├── Authentication (JWT)
+└── Database (PostgreSQL)
+
+Infrastructure (AWS)
+├── EC2 (Application servers)
+├── RDS (Database)
+├── S3 (Document storage)
+└── CloudFront (CDN)
+```
+
+### Key Technologies
+
+- **Frontend:** React, TypeScript, Redux Toolkit, Socket.io Client
+- **Backend:** Node.js, Express, Socket.io, JWT
+- **Database:** PostgreSQL with encrypted columns
+- **File Storage:** AWS S3 with server-side encryption
+- **Video Calls:** Twilio Video
+- **Email/SMS:** Twilio SendGrid
+
+## Accessibility Highlights
+
+Achieved 98/100 accessibility score through:
+
+1. **Semantic HTML** - Proper heading hierarchy, landmarks, lists
+2. **ARIA Labels** - All interactive elements properly labeled
+3. **Keyboard Navigation** - Tab order, focus indicators, shortcuts
+4. **Color Contrast** - WCAG AA compliance (4.5:1 minimum)
+5. **Screen Reader Testing** - Tested with NVDA, JAWS, VoiceOver
+
+## Security Measures
+
+### Data Protection
+- AES-256 encryption for data at rest
+- TLS 1.3 for data in transit
+- Database column-level encryption for PHI
+- Secure key management (AWS KMS)
+
+### Audit Logging
+All actions are logged:
+- User authentication
+- Record access
+- Data modifications
+- File downloads
+- Message sending
+
+## Lessons Learned
+
+1. **Accessibility from Day 1** - Building accessibility into the foundation saved significant refactoring later.
+
+2. **Real-time is complex** - WebSocket connection management, reconnection logic, and state synchronization required careful planning.
+
+3. **Compliance is ongoing** - HIPAA compliance isn't a one-time thing; it requires continuous monitoring and updates.
+
+4. **User testing is critical** - Testing with actual patients (various ages, abilities) revealed important usability issues.
+
+## Future Roadmap
+
+- Integration with wearable devices
+- AI-powered health insights
+- Multi-language support
+- Prescription refill automation
+- Family account management
+

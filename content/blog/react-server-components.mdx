@@ -1,0 +1,449 @@
+---
+title: "The Future of React: Server Components Deep Dive"
+description: "Exploring React Server Components, their benefits, and practical implementation patterns."
+date: "2024-11-28"
+tags: ["React", "Next.js", "Architecture", "Server Components"]
+author: "Nguyen Ngoc Duc"
+---
+
+## Introduction
+
+React Server Components (RSC) represent a fundamental shift in how we build React applications. After working extensively with them in production, I want to share insights into what they are, why they matter, and how to use them effectively.
+
+## What Are Server Components?
+
+Server Components are React components that run exclusively on the server. Unlike traditional React components that run on both server (SSR) and client, Server Components:
+
+- Run only on the server
+- Have direct access to backend resources
+- Don't send JavaScript to the client
+- Can be async functions
+
+## Key Benefits
+
+### 1. Zero Bundle Size
+
+Server Components don't add to your JavaScript bundle:
+
+```tsx
+// This entire component and its dependencies = 0KB to client
+async function UserPosts({ userId }: { userId: string }) {
+  const posts = await db.post.findMany({
+    where: { authorId: userId },
+  });
+  
+  return (
+    <div>
+      {posts.map(post => (
+        <PostCard key={post.id} post={post} />
+      ))}
+    </div>
+  );
+}
+```
+
+### 2. Direct Backend Access
+
+No need for API routes:
+
+```tsx
+// Before: Required API route + fetch
+async function getData() {
+  const res = await fetch('/api/posts');
+  return res.json();
+}
+
+// After: Direct database access
+async function ServerComponent() {
+  const posts = await db.post.findMany();
+  return <PostList posts={posts} />;
+}
+```
+
+### 3. Automatic Code Splitting
+
+Every Server Component is automatically a code split point.
+
+## Server vs Client Components
+
+### When to Use Server Components
+
+✅ **Use Server Components when:**
+- Fetching data
+- Accessing backend resources
+- Keeping sensitive information on server
+- Reducing client-side JavaScript
+
+### When to Use Client Components
+
+✅ **Use Client Components when:**
+- Using React hooks (useState, useEffect, etc.)
+- Handling browser events
+- Using browser-only APIs
+- Needing interactivity
+
+## Practical Patterns
+
+### Pattern 1: Server Component Wrapping Client Components
+
+```tsx
+// app/page.tsx (Server Component)
+import { ClientSearch } from './client-search';
+
+async function Page() {
+  const initialData = await fetchInitialData();
+  
+  return (
+    <div>
+      <h1>Products</h1>
+      {/* Pass server data to client component */}
+      <ClientSearch initialData={initialData} />
+    </div>
+  );
+}
+```
+
+```tsx
+// client-search.tsx (Client Component)
+'use client';
+
+export function ClientSearch({ initialData }) {
+  const [query, setQuery] = useState('');
+  const [data, setData] = useState(initialData);
+  
+  // Client-side interactivity
+  const handleSearch = async (query: string) => {
+    const results = await searchProducts(query);
+    setData(results);
+  };
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          handleSearch(e.target.value);
+        }}
+      />
+      <ProductList products={data} />
+    </div>
+  );
+}
+```
+
+### Pattern 2: Composing Server and Client Components
+
+```tsx
+// app/page.tsx (Server)
+import { Header } from './header'; // Client
+import { ProductList } from './product-list'; // Server
+
+async function Page() {
+  const products = await db.product.findMany();
+  
+  return (
+    <>
+      <Header /> {/* Client: Interactive */}
+      <ProductList products={products} /> {/* Server: Static */}
+    </>
+  );
+}
+```
+
+### Pattern 3: Streaming with Suspense
+
+```tsx
+import { Suspense } from 'react';
+
+export default function Page() {
+  return (
+    <div>
+      <Header />
+      
+      {/* Stream this component */}
+      <Suspense fallback={<ProductsSkeleton />}>
+        <Products />
+      </Suspense>
+      
+      {/* Stream this one too */}
+      <Suspense fallback={<ReviewsSkeleton />}>
+        <Reviews />
+      </Suspense>
+    </div>
+  );
+}
+
+async function Products() {
+  const products = await fetchProducts(); // Slow query
+  return <ProductList products={products} />;
+}
+
+async function Reviews() {
+  const reviews = await fetchReviews(); // Another slow query
+  return <ReviewList reviews={reviews} />;
+}
+```
+
+## Data Fetching Strategies
+
+### Parallel Data Fetching
+
+```tsx
+async function Page() {
+  // These run in parallel
+  const [user, posts, comments] = await Promise.all([
+    fetchUser(),
+    fetchPosts(),
+    fetchComments(),
+  ]);
+  
+  return (
+    <div>
+      <UserProfile user={user} />
+      <Posts posts={posts} />
+      <Comments comments={comments} />
+    </div>
+  );
+}
+```
+
+### Sequential Data Fetching
+
+```tsx
+async function Page() {
+  // These run sequentially when needed
+  const user = await fetchUser();
+  const posts = await fetchUserPosts(user.id); // Depends on user
+  const comments = await fetchPostComments(posts[0].id); // Depends on posts
+  
+  return <Content user={user} posts={posts} comments={comments} />;
+}
+```
+
+### Waterfall Prevention
+
+```tsx
+// ❌ Bad: Creates waterfall
+async function Page() {
+  return (
+    <Suspense>
+      <User /> {/* Fetches user */}
+      <Posts /> {/* Waits for User, then fetches posts */}
+    </Suspense>
+  );
+}
+
+// ✅ Good: Parallel fetching
+async function Page() {
+  const userPromise = fetchUser();
+  const postsPromise = fetchPosts();
+  
+  return (
+    <div>
+      <Suspense fallback={<UserSkeleton />}>
+        <User dataPromise={userPromise} />
+      </Suspense>
+      <Suspense fallback={<PostsSkeleton />}>
+        <Posts dataPromise={postsPromise} />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+## Common Pitfalls & Solutions
+
+### Pitfall 1: Importing Client Components in Server Components
+
+```tsx
+// ❌ This makes the entire tree client-side
+import { ClientComponent } from './client';
+
+export default function ServerComponent() {
+  return <ClientComponent />;
+}
+
+// ✅ This keeps server components on server
+import { ClientComponent } from './client';
+
+export default function ServerComponent() {
+  return (
+    <div>
+      {/* Server-rendered content */}
+      <h1>Server Content</h1>
+      {/* Only this is client-side */}
+      <ClientComponent />
+    </div>
+  );
+}
+```
+
+### Pitfall 2: Serialization Issues
+
+```tsx
+// ❌ Can't pass functions to client components
+<ClientComponent onClick={handleClick} />
+
+// ✅ Define handler in client component
+<ClientComponent onClickAction="delete" itemId={id} />
+```
+
+### Pitfall 3: Environment Variables
+
+```tsx
+// ❌ This won't work - server env vars aren't available to client
+'use client';
+
+export function ClientComponent() {
+  const apiKey = process.env.SECRET_KEY; // undefined!
+  return <div>{apiKey}</div>;
+}
+
+// ✅ Use public env vars for client, or fetch from API
+export function ClientComponent() {
+  const apiKey = process.env.NEXT_PUBLIC_API_KEY; // works
+  return <div>{apiKey}</div>;
+}
+```
+
+## Performance Optimization
+
+### 1. Minimize Client JavaScript
+
+```tsx
+// Only make interactive parts client components
+export default function Page() {
+  return (
+    <article>
+      {/* Server: No JS sent */}
+      <h1>Title</h1>
+      <p>Content...</p>
+      
+      {/* Client: Only this button's JS is sent */}
+      <LikeButton />
+    </article>
+  );
+}
+```
+
+### 2. Use Streaming for Better Perceived Performance
+
+```tsx
+export default function Page() {
+  return (
+    <>
+      {/* Sent immediately */}
+      <Header />
+      
+      {/* Streamed when ready */}
+      <Suspense fallback={<Skeleton />}>
+        <SlowComponent />
+      </Suspense>
+      
+      {/* Sent immediately */}
+      <Footer />
+    </>
+  );
+}
+```
+
+### 3. Optimize Data Fetching
+
+```tsx
+// Use React cache for deduplication
+import { cache } from 'react';
+
+const getUser = cache(async (id: string) => {
+  return db.user.findUnique({ where: { id } });
+});
+
+// Both calls only execute once
+async function Profile({ userId }: { userId: string }) {
+  const user = await getUser(userId);
+  return <div>{user.name}</div>;
+}
+
+async function Settings({ userId }: { userId: string }) {
+  const user = await getUser(userId); // Deduped!
+  return <div>{user.email}</div>;
+}
+```
+
+## Real-World Example
+
+Here's how I restructured a dashboard page:
+
+### Before (Client-Side)
+```tsx
+'use client';
+
+export default function Dashboard() {
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    async function load() {
+      const [userData, postsData] = await Promise.all([
+        fetch('/api/user').then(r => r.json()),
+        fetch('/api/posts').then(r => r.json()),
+      ]);
+      setUser(userData);
+      setPosts(postsData);
+      setLoading(false);
+    }
+    load();
+  }, []);
+  
+  if (loading) return <Skeleton />;
+  
+  return (
+    <div>
+      <UserProfile user={user} />
+      <PostsList posts={posts} />
+    </div>
+  );
+}
+```
+
+**Bundle size:** 45KB (including React, state management, etc.)
+
+### After (Server Components)
+```tsx
+// app/dashboard/page.tsx (Server Component)
+export default async function Dashboard() {
+  const [user, posts] = await Promise.all([
+    db.user.findFirst(),
+    db.post.findMany(),
+  ]);
+  
+  return (
+    <div>
+      <UserProfile user={user} />
+      <PostsList posts={posts} />
+    </div>
+  );
+}
+```
+
+**Bundle size:** 0KB (Server Component)
+
+**Benefits:**
+- Faster initial load (no client-side data fetching)
+- Better SEO (fully rendered on server)
+- Simpler code (no loading states, useEffect, useState)
+
+## Conclusion
+
+React Server Components are a game-changer for building performant React applications. Key takeaways:
+
+1. **Use Server Components by default** - Only use Client Components when needed
+2. **Embrace async/await** - Data fetching is now simpler
+3. **Think in terms of composition** - Mix Server and Client Components strategically
+4. **Leverage Suspense** - Stream content for better UX
+
+The mental model shift takes time, but the benefits—better performance, simpler code, and improved UX—make it worthwhile.
+
+Ready to dive deeper? Check out my [Next.js portfolio project](https://github.com/n2duc/portfolio) for more examples!
+
