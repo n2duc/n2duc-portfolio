@@ -90,15 +90,25 @@ export const MDXComponents = {
       {...props}
     />
   ),
-  code: (props: React.HTMLAttributes<HTMLElement>) => (
-    <code
-      className="rounded bg-card px-1.5 py-0.5 text-sm font-mono"
-      {...props}
-    />
-  ),
+  code: (props: React.HTMLAttributes<HTMLElement>) => {
+    // Check if this is inline code (not inside a pre tag)
+    const isInline = !props.className?.includes("hljs");
+    
+    if (isInline) {
+      return (
+        <code
+          className="rounded bg-card px-1.5 py-0.5 text-sm font-mono text-accent"
+          {...props}
+        />
+      );
+    }
+    
+    // For code blocks (inside pre), preserve the highlighting classes
+    return <code {...props} />;
+  },
   pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
     <pre
-      className="my-6 overflow-x-auto rounded-xl bg-card p-4 text-sm"
+      className="my-6 overflow-x-auto rounded-xl bg-[#1e1e1e] p-4 text-sm border border-border/50"
       {...props}
     />
   ),

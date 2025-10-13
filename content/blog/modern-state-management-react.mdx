@@ -1,0 +1,560 @@
+---
+title: "Modern State Management in React: 2024 Edition"
+description: "A comprehensive guide to choosing and implementing the right state management solution for your React applications in 2024."
+date: "2024-11-05"
+tags: ["React", "State Management", "Zustand", "Context API", "Architecture"]
+author: "Nguyen Ngoc Duc"
+---
+
+## Introduction
+
+State management in React has evolved significantly. Gone are the days when Redux was the only choice. In 2024, we have numerous options, each suited for different use cases. Let's explore when to use what.
+
+## The State Management Landscape
+
+### When You DON'T Need a Library
+
+Before reaching for a library, consider built-in solutions:
+
+**1. useState for Local State**
+
+```typescript
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+**2. URL State (Often Overlooked!)**
+
+```typescript
+'use client';
+
+import { useSearchParams, useRouter } from 'next/navigation';
+
+export function ProductFilter() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const category = searchParams.get('category') || 'all';
+  
+  const setCategory = (cat: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('category', cat);
+    router.push(`?${params.toString()}`);
+  };
+  
+  return (
+    <select value={category} onChange={(e) => setCategory(e.target.value)}>
+      <option value="all">All</option>
+      <option value="electronics">Electronics</option>
+      <option value="clothing">Clothing</option>
+    </select>
+  );
+}
+```
+
+**Benefits:**
+- ✅ Shareable URLs
+- ✅ Browser back/forward works
+- ✅ Bookmarkable state
+- ✅ No extra libraries
+
+**3. Server State (React Query/TanStack Query)**
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+function TodoList() {
+  const queryClient = useQueryClient();
+  
+  // Fetch todos
+  const { data: todos, isLoading } = useQuery({
+    queryKey: ['todos'],
+    queryFn: fetchTodos,
+  });
+  
+  // Add todo
+  const addTodo = useMutation({
+    mutationFn: createTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
+  
+  if (isLoading) return <div>Loading...</div>;
+  
+  return (
+    <div>
+      {todos?.map(todo => <TodoItem key={todo.id} todo={todo} />)}
+      <button onClick={() => addTodo.mutate({ text: 'New todo' })}>
+        Add Todo
+      </button>
+    </div>
+  );
+}
+```
+
+## Context API: The Built-in Solution
+
+### When to Use Context
+
+- Theme preferences
+- User authentication
+- Locale/i18n
+- Small apps with limited shared state
+
+### Proper Context Setup
+
+```typescript
+// contexts/theme-context.tsx
+'use client';
+
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+type Theme = 'light' | 'dark';
+
+interface ThemeContextType {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('light');
+  
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+  
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
+}
+```
+
+### Optimizing Context Performance
+
+```typescript
+// Split contexts to prevent unnecessary re-renders
+const ThemeContext = createContext<Theme>(undefined!);
+const ThemeUpdateContext = createContext<(theme: Theme) => void>(undefined!);
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('light');
+  
+  return (
+    <ThemeContext.Provider value={theme}>
+      <ThemeUpdateContext.Provider value={setTheme}>
+        {children}
+      </ThemeUpdateContext.Provider>
+    </ThemeContext.Provider>
+  );
+}
+
+// Components that only read don't re-render when setter changes
+export const useTheme = () => useContext(ThemeContext);
+export const useThemeUpdate = () => useContext(ThemeUpdateContext);
+```
+
+## Zustand: The Lightweight Champion
+
+### Why Zustand?
+
+- Minimal boilerplate
+- No providers needed
+- Easy to learn
+- Great TypeScript support
+- Middleware support
+
+### Basic Setup
+
+```typescript
+// store/use-cart-store.ts
+import { create } from 'zustand';
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartStore {
+  items: CartItem[];
+  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
+  total: number;
+}
+
+export const useCartStore = create<CartStore>((set, get) => ({
+  items: [],
+  
+  addItem: (item) => set((state) => {
+    const existing = state.items.find(i => i.id === item.id);
+    
+    if (existing) {
+      return {
+        items: state.items.map(i =>
+          i.id === item.id
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        ),
+      };
+    }
+    
+    return { items: [...state.items, { ...item, quantity: 1 }] };
+  }),
+  
+  removeItem: (id) => set((state) => ({
+    items: state.items.filter(i => i.id !== id),
+  })),
+  
+  updateQuantity: (id, quantity) => set((state) => ({
+    items: state.items.map(i =>
+      i.id === id ? { ...i, quantity } : i
+    ),
+  })),
+  
+  clearCart: () => set({ items: [] }),
+  
+  get total() {
+    return get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  },
+}));
+```
+
+### Using the Store
+
+```typescript
+'use client';
+
+import { useCartStore } from '@/store/use-cart-store';
+
+export function Cart() {
+  // Only subscribe to what you need
+  const items = useCartStore(state => state.items);
+  const total = useCartStore(state => state.total);
+  const removeItem = useCartStore(state => state.removeItem);
+  
+  return (
+    <div>
+      <h2>Cart ({items.length})</h2>
+      {items.map(item => (
+        <div key={item.id}>
+          <span>{item.name}</span>
+          <span>${item.price} × {item.quantity}</span>
+          <button onClick={() => removeItem(item.id)}>Remove</button>
+        </div>
+      ))}
+      <div>Total: ${total}</div>
+    </div>
+  );
+}
+```
+
+### Zustand Middleware
+
+```typescript
+import { create } from 'zustand';
+import { persist, devtools } from 'zustand/middleware';
+
+interface UserStore {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  logout: () => void;
+}
+
+export const useUserStore = create<UserStore>()(
+  devtools(
+    persist(
+      (set) => ({
+        user: null,
+        setUser: (user) => set({ user }),
+        logout: () => set({ user: null }),
+      }),
+      {
+        name: 'user-storage', // LocalStorage key
+      }
+    )
+  )
+);
+```
+
+## Redux Toolkit: Still Relevant
+
+### When to Use Redux
+
+- Large applications
+- Complex state logic
+- Need for time-travel debugging
+- Team familiar with Redux patterns
+
+### Modern Redux Setup
+
+```typescript
+// store/slices/todos-slice.ts
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+interface TodosState {
+  items: Todo[];
+  filter: 'all' | 'active' | 'completed';
+}
+
+const initialState: TodosState = {
+  items: [],
+  filter: 'all',
+};
+
+const todosSlice = createSlice({
+  name: 'todos',
+  initialState,
+  reducers: {
+    addTodo: (state, action: PayloadAction<string>) => {
+      state.items.push({
+        id: crypto.randomUUID(),
+        text: action.payload,
+        completed: false,
+      });
+    },
+    toggleTodo: (state, action: PayloadAction<string>) => {
+      const todo = state.items.find(t => t.id === action.payload);
+      if (todo) {
+        todo.completed = !todo.completed;
+      }
+    },
+    setFilter: (state, action: PayloadAction<TodosState['filter']>) => {
+      state.filter = action.payload;
+    },
+  },
+});
+
+export const { addTodo, toggleTodo, setFilter } = todosSlice.actions;
+export default todosSlice.reducer;
+```
+
+### RTK Query for API Calls
+
+```typescript
+// store/api/posts-api.ts
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+}
+
+export const postsApi = createApi({
+  reducerPath: 'postsApi',
+  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  tagTypes: ['Post'],
+  endpoints: (builder) => ({
+    getPosts: builder.query<Post[], void>({
+      query: () => '/posts',
+      providesTags: ['Post'],
+    }),
+    getPost: builder.query<Post, number>({
+      query: (id) => `/posts/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Post', id }],
+    }),
+    createPost: builder.mutation<Post, Partial<Post>>({
+      query: (post) => ({
+        url: '/posts',
+        method: 'POST',
+        body: post,
+      }),
+      invalidatesTags: ['Post'],
+    }),
+  }),
+});
+
+export const { useGetPostsQuery, useGetPostQuery, useCreatePostMutation } = postsApi;
+```
+
+## Jotai: Atomic State Management
+
+### The Atomic Approach
+
+```typescript
+// store/atoms.ts
+import { atom } from 'jotai';
+
+// Primitive atoms
+export const countAtom = atom(0);
+export const userAtom = atom<User | null>(null);
+
+// Derived atoms
+export const doubleCountAtom = atom(
+  (get) => get(countAtom) * 2
+);
+
+// Write-only atoms
+export const incrementAtom = atom(
+  null,
+  (get, set) => set(countAtom, get(countAtom) + 1)
+);
+
+// Async atoms
+export const postsAtom = atom(async () => {
+  const response = await fetch('/api/posts');
+  return response.json();
+});
+```
+
+### Using Atoms
+
+```typescript
+'use client';
+
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { countAtom, doubleCountAtom, incrementAtom } from '@/store/atoms';
+
+export function Counter() {
+  const [count, setCount] = useAtom(countAtom);
+  const doubleCount = useAtomValue(doubleCountAtom);
+  const increment = useSetAtom(incrementAtom);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <p>Double: {doubleCount}</p>
+      <button onClick={increment}>Increment</button>
+    </div>
+  );
+}
+```
+
+## Decision Matrix
+
+<Callout type="info">
+**Choose based on your needs:**
+
+**URL State** → Filters, tabs, pagination, search
+**useState** → Component-local state, forms
+**Context API** → Theme, auth, i18n (small apps)
+**Zustand** → Global state, simple to moderate complexity
+**Redux Toolkit** → Large apps, complex logic, team experience
+**Jotai** → Fine-grained reactivity, atomic updates
+**TanStack Query** → Server state, caching, synchronization
+</Callout>
+
+## Best Practices
+
+### 1. Separate Concerns
+
+```typescript
+// ❌ Don't mix server and UI state
+const store = {
+  posts: [], // Server state
+  selectedPostId: null, // UI state
+};
+
+// ✅ Separate them
+const posts = useQuery(['posts'], fetchPosts); // Server state
+const [selectedId, setSelectedId] = useState(null); // UI state
+```
+
+### 2. Normalize Data
+
+```typescript
+// ❌ Nested data is hard to update
+interface State {
+  posts: {
+    id: number;
+    author: {
+      id: number;
+      name: string;
+    };
+    comments: Array<{
+      id: number;
+      text: string;
+    }>;
+  }[];
+}
+
+// ✅ Normalized structure
+interface NormalizedState {
+  posts: Record<number, Post>;
+  authors: Record<number, Author>;
+  comments: Record<number, Comment>;
+}
+```
+
+### 3. Avoid Prop Drilling
+
+```typescript
+// ❌ Passing props through many levels
+<GrandParent user={user}>
+  <Parent user={user}>
+    <Child user={user}>
+      <GrandChild user={user} />
+    </Child>
+  </Parent>
+</GrandParent>
+
+// ✅ Use state management
+const user = useUserStore(state => state.user);
+```
+
+### 4. Memoize Selectors
+
+```typescript
+// Zustand
+const expensiveValue = useStore(
+  useCallback(
+    state => state.items.filter(item => item.active).length,
+    []
+  )
+);
+
+// Redux
+import { createSelector } from '@reduxjs/toolkit';
+
+const selectActiveItems = createSelector(
+  [(state: RootState) => state.items],
+  (items) => items.filter(item => item.active)
+);
+```
+
+## Conclusion
+
+State management in 2024 is about **choosing the right tool** for the job:
+
+1. **Start simple** - useState and URL state go far
+2. **Server state ≠ Client state** - Use TanStack Query for server data
+3. **Pick based on complexity** - Don't over-engineer
+4. **Type safety** - Use TypeScript for better DX
+5. **Performance** - Optimize subscriptions and memoization
+
+The best state management solution is the simplest one that solves your problem.
+
+---
+
+**What's your go-to state management library?** [Share your experience](/contact)!
+

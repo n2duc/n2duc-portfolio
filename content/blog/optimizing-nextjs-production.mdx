@@ -1,0 +1,564 @@
+---
+title: "Optimizing Next.js Applications for Production"
+description: "Essential strategies and techniques to maximize performance, reduce bundle size, and improve user experience in production Next.js apps."
+date: "2024-10-15"
+tags: ["Next.js", "Performance", "Optimization", "Production"]
+author: "Nguyen Ngoc Duc"
+---
+
+## Introduction
+
+Deploying a Next.js app to production is just the beginning. To deliver the best user experience, you need to optimize every aspect—from bundle size to caching strategies. In this guide, I'll share proven techniques to make your Next.js app lightning fast.
+
+## Bundle Size Optimization
+
+### 1. Analyze Your Bundle
+
+First, understand what's in your bundle:
+
+```bash
+# Build with bundle analyzer
+npm install -D @next/bundle-analyzer
+
+# Enable in next.config.js
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+module.exports = withBundleAnalyzer({
+  // your config
+})
+
+# Analyze
+ANALYZE=true npm run build
+```
+
+### 2. Dynamic Imports
+
+Load heavy components only when needed:
+
+```typescript
+// ❌ Bad - Loads chart library immediately
+import { Chart } from 'react-chartjs-2';
+
+export default function Dashboard() {
+  return <Chart data={data} />;
+}
+
+// ✅ Good - Loads only when component renders
+import dynamic from 'next/dynamic';
+
+const Chart = dynamic(() => import('react-chartjs-2').then(mod => mod.Chart), {
+  loading: () => <ChartSkeleton />,
+  ssr: false, // Don't render on server if not needed
+});
+
+export default function Dashboard() {
+  return <Chart data={data} />;
+}
+```
+
+### 3. Tree Shaking
+
+Import only what you need:
+
+```typescript
+// ❌ Bad - Imports entire library
+import _ from 'lodash';
+const result = _.debounce(fn, 300);
+
+// ✅ Good - Imports only needed function
+import debounce from 'lodash/debounce';
+const result = debounce(fn, 300);
+
+// ✅ Better - Use modern alternatives
+const debounce = (fn: Function, ms: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), ms);
+  };
+};
+```
+
+### 4. Remove Unused Dependencies
+
+```bash
+# Find unused dependencies
+npx depcheck
+
+# Remove them
+npm uninstall unused-package
+```
+
+## Image Optimization
+
+### Using next/image Effectively
+
+```typescript
+import Image from 'next/image';
+
+export function ProductImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={800}
+      height={600}
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRg..." // Generate with plaiceholder
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      priority={false} // Only true for above-fold images
+      quality={85} // Default is 75, adjust based on needs
+    />
+  );
+}
+```
+
+### Responsive Images
+
+```typescript
+// Use srcSet for different screen sizes
+export function ResponsiveImage() {
+  return (
+    <Image
+      src="/hero.jpg"
+      alt="Hero"
+      fill
+      sizes="(max-width: 640px) 100vw,
+             (max-width: 1024px) 50vw,
+             33vw"
+      style={{ objectFit: 'cover' }}
+    />
+  );
+}
+```
+
+## Font Optimization
+
+### Using next/font
+
+```typescript
+// app/layout.tsx
+import { Inter, Playfair_Display } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-playfair',
+  weight: ['400', '700'],
+});
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### Local Fonts
+
+```typescript
+import localFont from 'next/font/local';
+
+const customFont = localFont({
+  src: [
+    {
+      path: './fonts/custom-regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './fonts/custom-bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  display: 'swap',
+  variable: '--font-custom',
+});
+```
+
+## Caching Strategies
+
+### ISR (Incremental Static Regeneration)
+
+```typescript
+// app/blog/[slug]/page.tsx
+export const revalidate = 3600; // Revalidate every hour
+
+export default async function BlogPost({ params }) {
+  const post = await getPost(params.slug);
+  
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+    </article>
+  );
+}
+```
+
+### On-Demand Revalidation
+
+```typescript
+// app/api/revalidate/route.ts
+import { revalidatePath, revalidateTag } from 'next/cache';
+
+export async function POST(request: Request) {
+  const { path, tag } = await request.json();
+  
+  if (path) {
+    revalidatePath(path);
+  }
+  
+  if (tag) {
+    revalidateTag(tag);
+  }
+  
+  return Response.json({ revalidated: true });
+}
+
+// Trigger revalidation
+fetch('/api/revalidate', {
+  method: 'POST',
+  body: JSON.stringify({ path: '/blog/my-post' }),
+});
+```
+
+### Custom Cache Control
+
+```typescript
+// app/api/data/route.ts
+export async function GET() {
+  const data = await fetchData();
+  
+  return Response.json(data, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+    },
+  });
+}
+```
+
+## Code Splitting Strategies
+
+### Route-Based Splitting
+
+Next.js automatically splits by route, but you can optimize further:
+
+```typescript
+// app/dashboard/layout.tsx
+import dynamic from 'next/dynamic';
+
+const Sidebar = dynamic(() => import('./sidebar'), {
+  loading: () => <SidebarSkeleton />,
+});
+
+const Analytics = dynamic(() => import('./analytics'), {
+  ssr: false, // Client-side only
+});
+
+export default function DashboardLayout({ children }) {
+  return (
+    <div>
+      <Sidebar />
+      <main>{children}</main>
+      <Analytics />
+    </div>
+  );
+}
+```
+
+### Component-Level Splitting
+
+```typescript
+// Split large component libraries
+const ReactQuill = dynamic(() => import('react-quill'), {
+  ssr: false,
+  loading: () => <div>Loading editor...</div>,
+});
+
+// Split by user action
+function Editor() {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const AdvancedTools = dynamic(() => import('./advanced-tools'));
+  
+  return (
+    <div>
+      <BasicEditor />
+      {showAdvanced && <AdvancedTools />}
+    </div>
+  );
+}
+```
+
+## Database Query Optimization
+
+### Use Caching with fetch
+
+```typescript
+// Automatically cached
+async function getProducts() {
+  const res = await fetch('https://api.example.com/products', {
+    next: { revalidate: 3600 },
+  });
+  return res.json();
+}
+
+// Cache with tags
+async function getUser(id: string) {
+  const res = await fetch(`https://api.example.com/users/${id}`, {
+    next: { tags: [`user-${id}`] },
+  });
+  return res.json();
+}
+```
+
+### Optimize Database Queries
+
+```typescript
+// ❌ Bad - N+1 query problem
+async function getBlogPosts() {
+  const posts = await db.post.findMany();
+  
+  // This runs a query for each post!
+  const postsWithAuthors = await Promise.all(
+    posts.map(async (post) => ({
+      ...post,
+      author: await db.user.findUnique({ where: { id: post.authorId } }),
+    }))
+  );
+  
+  return postsWithAuthors;
+}
+
+// ✅ Good - Single query with join
+async function getBlogPosts() {
+  const posts = await db.post.findMany({
+    include: {
+      author: true,
+    },
+  });
+  
+  return posts;
+}
+```
+
+## Middleware Optimization
+
+```typescript
+// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  // Only run on specific paths
+  if (!request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+  
+  // Add security headers
+  const response = NextResponse.next();
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  
+  return response;
+}
+
+// Only run middleware on specific paths
+export const config = {
+  matcher: ['/api/:path*', '/dashboard/:path*'],
+};
+```
+
+## Third-Party Script Optimization
+
+```typescript
+import Script from 'next/script';
+
+export default function Page() {
+  return (
+    <>
+      {/* Load analytics after page is interactive */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=GA_ID"
+        strategy="afterInteractive"
+      />
+      
+      {/* Lazy load non-critical scripts */}
+      <Script
+        src="https://widget.example.com/widget.js"
+        strategy="lazyOnload"
+      />
+    </>
+  );
+}
+```
+
+## Production Checklist
+
+<Callout type="success">
+**Before Deploying:**
+
+- [ ] Run `npm run build` and check for warnings
+- [ ] Analyze bundle with `ANALYZE=true npm run build`
+- [ ] Test with Lighthouse (aim for 90+ scores)
+- [ ] Enable compression (Gzip/Brotli)
+- [ ] Set up proper caching headers
+- [ ] Optimize images (WebP/AVIF)
+- [ ] Remove console.logs and debug code
+- [ ] Test on real devices (not just desktop)
+- [ ] Set up error tracking (Sentry, etc.)
+- [ ] Configure CDN (Vercel Edge Network, Cloudflare)
+- [ ] Set environment variables
+- [ ] Test production build locally
+</Callout>
+
+## Monitoring in Production
+
+### Set Up Real User Monitoring
+
+```typescript
+// lib/analytics.ts
+export function reportWebVitals({ id, name, value }: Metric) {
+  // Send to analytics
+  fetch('/api/analytics', {
+    method: 'POST',
+    body: JSON.stringify({ id, name, value }),
+  });
+}
+
+// app/layout.tsx
+import { reportWebVitals } from '@/lib/analytics';
+
+export { reportWebVitals };
+```
+
+### Error Boundary
+
+```typescript
+'use client';
+
+import { useEffect } from 'react';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log to error tracking service
+    console.error('Error:', error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={reset}>Try again</button>
+    </div>
+  );
+}
+```
+
+## Advanced Optimizations
+
+### Parallel Data Fetching
+
+```typescript
+// ✅ Fetch in parallel
+export default async function Page() {
+  const [user, posts, comments] = await Promise.all([
+    fetchUser(),
+    fetchPosts(),
+    fetchComments(),
+  ]);
+
+  return <Dashboard user={user} posts={posts} comments={comments} />;
+}
+```
+
+### Streaming with Suspense
+
+```typescript
+import { Suspense } from 'react';
+
+export default function Page() {
+  return (
+    <div>
+      <Header />
+      
+      {/* Stream this component */}
+      <Suspense fallback={<ProductsSkeleton />}>
+        <Products />
+      </Suspense>
+      
+      {/* Stream this one too */}
+      <Suspense fallback={<ReviewsSkeleton />}>
+        <Reviews />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+### Prefetching
+
+```typescript
+import Link from 'next/link';
+
+// Automatic prefetching on hover
+export function Navigation() {
+  return (
+    <Link
+      href="/dashboard"
+      prefetch={true} // Default in production
+    >
+      Dashboard
+    </Link>
+  );
+}
+
+// Programmatic prefetching
+import { useRouter } from 'next/navigation';
+
+function Button() {
+  const router = useRouter();
+  
+  return (
+    <button
+      onMouseEnter={() => router.prefetch('/dashboard')}
+      onClick={() => router.push('/dashboard')}
+    >
+      Go to Dashboard
+    </button>
+  );
+}
+```
+
+## Conclusion
+
+Optimizing Next.js for production is an ongoing process:
+
+1. **Measure first** - Use Lighthouse and analytics
+2. **Optimize assets** - Images, fonts, and scripts
+3. **Split code** - Dynamic imports and lazy loading
+4. **Cache strategically** - ISR, static, and dynamic caching
+5. **Monitor continuously** - Track real user metrics
+
+The result? Faster load times, better SEO, and happier users.
+
+---
+
+**Questions or optimization tips to share?** [Let me know](/contact)!
+

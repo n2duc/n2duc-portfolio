@@ -2,17 +2,18 @@ import { Github, Linkedin, Mail, Twitter } from "lucide-react";
 
 export const siteConfig = {
   name: "Nguyen Ngoc Duc",
+  shortName: "N2DUC",
   title: "Website Developer / Frontend Engineer",
   description: "I build fast, accessible, and delightful web experiences.",
   location: "Da Nang, VN",
-  email: "contact@n2duc.dev",
+  email: "n2duc.dev.work@gmail.com",
   url: "https://n2duc.dev",
   ogImage: "/og-default.png",
   links: {
     github: "https://github.com/n2duc",
     linkedin: "https://linkedin.com/in/n2duc",
     twitter: "https://twitter.com/n2duc",
-    email: "mailto:contact@n2duc.dev",
+    email: "mailto:n2duc.dev.work@gmail.com",
   },
 };
 
@@ -141,7 +142,7 @@ export const trustedCompanies = [
   { name: "TechCorp", logo: "/logos/techcorp.svg" },
   { name: "StartupXYZ", logo: "/logos/startupxyz.svg" },
   { name: "HealthTech", logo: "/logos/healthtech.svg" },
-  { name: "E-Commerce Co", logo: "/logos/ecommerce.svg" },
+  { name: "E-Commerce", logo: "/logos/ecommerce.svg" },
   { name: "Agency Pro", logo: "/logos/agency.svg" },
 ];
 

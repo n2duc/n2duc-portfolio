@@ -65,7 +65,7 @@ export function Timeline({ items }: TimelineProps) {
               </div>
 
               {/* Center dot */}
-              <div className="absolute left-0 md:left-1/2 w-4 h-4 rounded-full bg-accent border-4 border-bg transform md:-translate-x-1/2" />
+              <div className="absolute left-0 md:left-1/2 w-4 h-4 rounded-full bg-accent border-4 border-bg transform -translate-x-[calc(50%-1px)]" />
             </motion.div>
           );
         })}

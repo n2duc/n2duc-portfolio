@@ -82,7 +82,7 @@ export default async function BlogPostPage({
       />
 
       <article className="pt-24 pb-16">
-        <div className="mx-auto max-w-3xl px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl px-6 lg:px-8">
           <Button variant="ghost" asChild className="mb-8">
             <Link href="/blog">
               <ArrowLeft className="h-4 w-4" />

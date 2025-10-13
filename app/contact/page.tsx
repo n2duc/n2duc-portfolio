@@ -35,7 +35,7 @@ export default function ContactPage() {
               </p>
             </div>
 
-            <Card>
+            <Card className="shadow-none">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
@@ -87,7 +87,7 @@ export default function ContactPage() {
           </div>
 
           {/* Contact Form */}
-          <Card>
+          <Card className="shadow-none">
             <CardContent className="p-8">
               <ContactFormSimple />
             </CardContent>

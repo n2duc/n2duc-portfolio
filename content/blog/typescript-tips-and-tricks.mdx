@@ -1,0 +1,589 @@
+---
+title: "TypeScript Tips and Tricks for Better Developer Experience"
+description: "Level up your TypeScript skills with practical tips, advanced patterns, and productivity boosters for modern web development."
+date: "2024-09-22"
+tags: ["TypeScript", "Developer Experience", "Best Practices", "Productivity"]
+author: "Nguyen Ngoc Duc"
+---
+
+## Introduction
+
+TypeScript has become essential in modern web development. But are you using it to its full potential? In this guide, I'll share practical tips and patterns that have significantly improved my development experience.
+
+## Type Inference: Let TypeScript Work for You
+
+### Don't Over-Annotate
+
+```typescript
+// ❌ Unnecessary type annotations
+const name: string = "John";
+const age: number = 30;
+const isActive: boolean = true;
+
+// ✅ Let TypeScript infer
+const name = "John"; // inferred as string
+const age = 30; // inferred as number
+const isActive = true; // inferred as boolean
+```
+
+### Use `as const` for Literal Types
+
+```typescript
+// ❌ Type is too wide
+const config = {
+  apiUrl: "https://api.example.com",
+  timeout: 5000,
+};
+// config.apiUrl is string (any string)
+
+// ✅ Exact literal types
+const config = {
+  apiUrl: "https://api.example.com",
+  timeout: 5000,
+} as const;
+// config.apiUrl is "https://api.example.com" (exact value)
+
+// Great for creating enums
+const COLORS = ["red", "blue", "green"] as const;
+type Color = typeof COLORS[number]; // "red" | "blue" | "green"
+```
+
+## Advanced Type Patterns
+
+### Conditional Types
+
+```typescript
+// Extract return type based on input
+type ApiResponse<T> = T extends { data: infer U } ? U : never;
+
+interface SuccessResponse {
+  data: { id: number; name: string };
+}
+
+type UserData = ApiResponse<SuccessResponse>;
+// { id: number; name: string }
+```
+
+### Mapped Types
+
+```typescript
+// Make all properties optional
+type Partial<T> = {
+  [P in keyof T]?: T[P];
+};
+
+// Make all properties readonly
+type Readonly<T> = {
+  readonly [P in keyof T]: T[P];
+};
+
+// Pick specific properties
+type Pick<T, K extends keyof T> = {
+  [P in K]: T[P];
+};
+
+// Practical example
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+}
+
+type PublicUser = Omit<User, "password">;
+// { id: number; name: string; email: string; }
+
+type UserUpdate = Partial<Pick<User, "name" | "email">>;
+// { name?: string; email?: string; }
+```
+
+### Template Literal Types
+
+```typescript
+// Create route types
+type Route = "/home" | "/about" | "/contact";
+type ApiRoute = `api${Route}`; // "/api/home" | "/api/about" | "/api/contact"
+
+// Event naming
+type EventName = "click" | "focus" | "blur";
+type EventHandler = `on${Capitalize<EventName>}`;
+// "onClick" | "onFocus" | "onBlur"
+
+// Practical use
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+type Endpoint = "/users" | "/posts" | "/comments";
+type ApiEndpoint = `${HttpMethod} ${Endpoint}`;
+// "GET /users" | "POST /users" | "PUT /users" | ...
+```
+
+## Utility Types You Should Know
+
+### ReturnType and Parameters
+
+```typescript
+function createUser(name: string, age: number) {
+  return { id: crypto.randomUUID(), name, age };
+}
+
+// Extract return type
+type User = ReturnType<typeof createUser>;
+// { id: string; name: string; age: number; }
+
+// Extract parameters
+type CreateUserParams = Parameters<typeof createUser>;
+// [string, number]
+```
+
+### Awaited (TypeScript 4.5+)
+
+```typescript
+// Extract type from Promise
+type User = Awaited<Promise<{ id: number; name: string }>>;
+// { id: number; name: string }
+
+// Useful for async functions
+async function fetchUser() {
+  const response = await fetch("/api/user");
+  return response.json();
+}
+
+type FetchedUser = Awaited<ReturnType<typeof fetchUser>>;
+```
+
+### NonNullable
+
+```typescript
+type MaybeString = string | null | undefined;
+type DefiniteString = NonNullable<MaybeString>; // string
+
+// Practical use
+function processValue(value: string | null | undefined) {
+  if (value != null) {
+    // TypeScript knows value is NonNullable here
+    const uppercased: NonNullable<typeof value> = value.toUpperCase();
+  }
+}
+```
+
+## Type Guards
+
+### User-Defined Type Guards
+
+```typescript
+interface Cat {
+  meow: () => void;
+}
+
+interface Dog {
+  bark: () => void;
+}
+
+// Type guard
+function isCat(animal: Cat | Dog): animal is Cat {
+  return (animal as Cat).meow !== undefined;
+}
+
+function makeSound(animal: Cat | Dog) {
+  if (isCat(animal)) {
+    animal.meow(); // TypeScript knows it's a Cat
+  } else {
+    animal.bark(); // TypeScript knows it's a Dog
+  }
+}
+```
+
+### Discriminated Unions
+
+```typescript
+// Powerful pattern for handling different states
+type ApiState<T> =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: T }
+  | { status: "error"; error: Error };
+
+function handleApiState<T>(state: ApiState<T>) {
+  switch (state.status) {
+    case "idle":
+      return <div>Not started</div>;
+    case "loading":
+      return <div>Loading...</div>;
+    case "success":
+      return <div>Data: {JSON.stringify(state.data)}</div>;
+    case "error":
+      return <div>Error: {state.error.message}</div>;
+  }
+}
+```
+
+## Generic Patterns
+
+### Generic Constraints
+
+```typescript
+// Constrain to objects with an id
+function getById<T extends { id: number }>(items: T[], id: number): T | undefined {
+  return items.find(item => item.id === id);
+}
+
+// Constrain to specific keys
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}
+
+const user = { name: "John", age: 30 };
+const name = getProperty(user, "name"); // type: string
+const age = getProperty(user, "age"); // type: number
+```
+
+### Generic with Default Types
+
+```typescript
+interface ApiResponse<T = unknown, E = Error> {
+  data?: T;
+  error?: E;
+  loading: boolean;
+}
+
+// Use with defaults
+const response1: ApiResponse = { loading: false };
+
+// Use with specific types
+const response2: ApiResponse<User, string> = {
+  data: { id: 1, name: "John" },
+  loading: false,
+};
+```
+
+## Narrowing Techniques
+
+### `typeof` Narrowing
+
+```typescript
+function process(value: string | number) {
+  if (typeof value === "string") {
+    return value.toUpperCase(); // string
+  }
+  return value.toFixed(2); // number
+}
+```
+
+### `in` Operator Narrowing
+
+```typescript
+interface Bird {
+  fly: () => void;
+}
+
+interface Fish {
+  swim: () => void;
+}
+
+function move(animal: Bird | Fish) {
+  if ("fly" in animal) {
+    animal.fly(); // Bird
+  } else {
+    animal.swim(); // Fish
+  }
+}
+```
+
+### Truthiness Narrowing
+
+```typescript
+function printLength(str: string | null | undefined) {
+  if (str) {
+    console.log(str.length); // string
+  } else {
+    console.log(0); // null or undefined
+  }
+}
+```
+
+## React-Specific TypeScript Tips
+
+### Typing Props
+
+```typescript
+// ❌ Using FC (not recommended)
+const Button: React.FC<{ onClick: () => void }> = ({ onClick, children }) => {
+  return <button onClick={onClick}>{children}</button>;
+};
+
+// ✅ Regular function with typed props
+interface ButtonProps {
+  onClick: () => void;
+  variant?: "primary" | "secondary";
+  children: React.ReactNode;
+}
+
+export function Button({ onClick, variant = "primary", children }: ButtonProps) {
+  return (
+    <button onClick={onClick} className={variant}>
+      {children}
+    </button>
+  );
+}
+```
+
+### Generic Components
+
+```typescript
+interface SelectProps<T> {
+  options: T[];
+  value: T;
+  onChange: (value: T) => void;
+  getLabel: (option: T) => string;
+  getValue: (option: T) => string;
+}
+
+export function Select<T>({
+  options,
+  value,
+  onChange,
+  getLabel,
+  getValue,
+}: SelectProps<T>) {
+  return (
+    <select
+      value={getValue(value)}
+      onChange={(e) => {
+        const selected = options.find(
+          (opt) => getValue(opt) === e.target.value
+        );
+        if (selected) onChange(selected);
+      }}
+    >
+      {options.map((option) => (
+        <option key={getValue(option)} value={getValue(option)}>
+          {getLabel(option)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// Usage
+<Select
+  options={users}
+  value={selectedUser}
+  onChange={setSelectedUser}
+  getLabel={(user) => user.name}
+  getValue={(user) => user.id.toString()}
+/>
+```
+
+### Event Handlers
+
+```typescript
+// Specific event types
+function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
+  console.log(event.currentTarget.value);
+}
+
+function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+  console.log(event.target.value);
+}
+
+function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+}
+
+// Generic event handler type
+type EventHandler<T = Element> = (event: React.MouseEvent<T>) => void;
+
+const handleButtonClick: EventHandler<HTMLButtonElement> = (event) => {
+  // ...
+};
+```
+
+## Type-Safe Environment Variables
+
+```typescript
+// env.ts
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      NEXT_PUBLIC_API_URL: string;
+      NEXT_PUBLIC_GA_ID: string;
+      DATABASE_URL: string;
+      SECRET_KEY: string;
+    }
+  }
+}
+
+export {};
+
+// Now you get autocomplete and type safety
+const apiUrl = process.env.NEXT_PUBLIC_API_URL; // string
+```
+
+## Advanced Patterns
+
+### Builder Pattern
+
+```typescript
+class QueryBuilder<T> {
+  private filters: Array<(item: T) => boolean> = [];
+  
+  where(predicate: (item: T) => boolean): this {
+    this.filters.push(predicate);
+    return this;
+  }
+  
+  execute(data: T[]): T[] {
+    return data.filter(item => 
+      this.filters.every(filter => filter(item))
+    );
+  }
+}
+
+// Usage
+const users = [
+  { name: "John", age: 30, active: true },
+  { name: "Jane", age: 25, active: false },
+];
+
+const result = new QueryBuilder<typeof users[number]>()
+  .where(u => u.age > 25)
+  .where(u => u.active)
+  .execute(users);
+```
+
+### Branded Types
+
+```typescript
+// Create nominal types
+type Brand<K, T> = K & { __brand: T };
+
+type UserId = Brand<number, "UserId">;
+type PostId = Brand<number, "PostId">;
+
+function getUserById(id: UserId) {
+  // ...
+}
+
+function getPostById(id: PostId) {
+  // ...
+}
+
+const userId = 1 as UserId;
+const postId = 1 as PostId;
+
+getUserById(userId); // ✅
+getUserById(postId); // ❌ Type error!
+```
+
+## Productivity Boosters
+
+### Type-Safe Object Keys
+
+```typescript
+// Instead of Object.keys which returns string[]
+function objectKeys<T extends object>(obj: T): Array<keyof T> {
+  return Object.keys(obj) as Array<keyof T>;
+}
+
+const user = { name: "John", age: 30 };
+objectKeys(user).forEach(key => {
+  console.log(user[key]); // Type-safe!
+});
+```
+
+### Exhaustiveness Checking
+
+```typescript
+type Status = "pending" | "approved" | "rejected";
+
+function handleStatus(status: Status) {
+  switch (status) {
+    case "pending":
+      return "Waiting...";
+    case "approved":
+      return "Success!";
+    case "rejected":
+      return "Failed!";
+    default:
+      // This ensures all cases are handled
+      const exhaustive: never = status;
+      throw new Error(`Unhandled status: ${exhaustive}`);
+  }
+}
+```
+
+### Safe Array Access
+
+```typescript
+function safeArrayAccess<T>(arr: T[], index: number): T | undefined {
+  return arr[index];
+}
+
+const numbers = [1, 2, 3];
+const value = safeArrayAccess(numbers, 5); // number | undefined
+```
+
+## Common Pitfalls to Avoid
+
+### 1. Using `any`
+
+```typescript
+// ❌ Defeats the purpose of TypeScript
+function processData(data: any) {
+  return data.value.toUpperCase(); // No type safety!
+}
+
+// ✅ Use proper types or unknown
+function processData(data: unknown) {
+  if (typeof data === "object" && data !== null && "value" in data) {
+    const value = (data as { value: unknown }).value;
+    if (typeof value === "string") {
+      return value.toUpperCase();
+    }
+  }
+  throw new Error("Invalid data");
+}
+```
+
+### 2. Type Assertions Without Validation
+
+```typescript
+// ❌ Unsafe type assertion
+const user = response.data as User;
+
+// ✅ Validate first
+function isUser(data: unknown): data is User {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "id" in data &&
+    "name" in data
+  );
+}
+
+const user = isUser(response.data) ? response.data : null;
+```
+
+## Conclusion
+
+TypeScript is powerful when used correctly:
+
+1. **Let inference work** - Don't over-annotate
+2. **Use utility types** - They're there for a reason
+3. **Create type guards** - Make runtime checks type-safe
+4. **Embrace generics** - Write reusable, type-safe code
+5. **Avoid `any`** - Use `unknown` and narrow instead
+
+<Callout type="success">
+**Pro Tips:**
+- Enable `strict` mode in `tsconfig.json`
+- Use ESLint with TypeScript rules
+- Learn to read error messages
+- Use IDE autocomplete (it's your friend!)
+</Callout>
+
+The goal isn't just type safety—it's better developer experience and fewer runtime errors.
+
+---
+
+**Have TypeScript tips to share?** [Let me know](/contact)!
+

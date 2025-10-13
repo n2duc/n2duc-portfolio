@@ -27,14 +27,14 @@ export function Hero() {
           >
             <div className="relative w-32 h-32 mx-auto">
               <Image
-                src="/avatar.jpg"
+                src="/avatar.jpeg"
                 alt={siteConfig.name}
                 width={128}
                 height={128}
-                className="rounded-full border-4 border-accent shadow-glow"
+                className="rounded-full border-4 border-accent shadow-glow object-cover w-full h-full"
                 priority
               />
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-accent rounded-full border-4 border-bg" />
+              <div className="absolute -bottom-0 right-2 w-8 h-8 bg-accent rounded-full border-4 border-bg" />
             </div>
           </motion.div>
 

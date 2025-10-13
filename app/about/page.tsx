@@ -43,8 +43,8 @@ const timelineItems: TimelineItem[] = [
   {
     type: "education",
     title: "B.S. Computer Science",
-    organization: "Da Nang University of Technology",
-    date: "2016 - 2020",
+    organization: "Duy Tan University",
+    date: "2021 - 2025",
     description:
       "Graduated with honors. Specialized in web technologies and human-computer interaction.",
   },
@@ -99,7 +99,7 @@ export default function AboutPage() {
           <div className="relative">
             <div className="relative aspect-square rounded-2xl overflow-hidden border-4 border-accent shadow-glow">
               <Image
-                src="/about-photo.jpg"
+                src="/about-photo.jpeg"
                 alt={siteConfig.name}
                 fill
                 className="object-cover"

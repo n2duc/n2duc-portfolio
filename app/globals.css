@@ -2,8 +2,8 @@
 
 :root {
   /* Accent colors (same for both themes) */
-  --accent: #22d3ee;
-  --accent-2: #a78bfa;
+  --accent: #40c9a2;
+  --accent-2: #8bfad7;
 
   /* Typography */
   --font-sans: var(--font-inter);

@@ -2,6 +2,9 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { compileMDX } from "next-mdx-remote/rsc";
+import rehypeHighlight from "rehype-highlight";
+import rehypeSlug from "rehype-slug";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { MDXComponents } from "@/components/mdx-components";
 
 const contentDirectory = path.join(process.cwd(), "content");
@@ -73,6 +76,13 @@ export async function getProjectBySlug(slug: string) {
     components: MDXComponents,
     options: {
       parseFrontmatter: true,
+      mdxOptions: {
+        rehypePlugins: [
+          rehypeHighlight,
+          rehypeSlug,
+          [rehypeAutolinkHeadings, { behavior: "wrap" }],
+        ],
+      },
     },
   });
 
@@ -129,6 +139,13 @@ export async function getBlogPostBySlug(slug: string) {
     components: MDXComponents,
     options: {
       parseFrontmatter: true,
+      mdxOptions: {
+        rehypePlugins: [
+          rehypeHighlight,
+          rehypeSlug,
+          [rehypeAutolinkHeadings, { behavior: "wrap" }],
+        ],
+      },
     },
   });
 
