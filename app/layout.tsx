@@ -43,7 +43,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${sora.variable}`}>
         <ThemeProvider
           attribute="data-theme"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
