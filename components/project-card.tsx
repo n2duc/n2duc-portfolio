@@ -24,23 +24,37 @@ export function ProjectCard({
 }: ProjectCardProps) {
   return (
     <motion.div
-      whileHover={{ y: -8 }}
-      transition={{ duration: 0.3 }}
+      whileHover={{ scale: 1.02, y: -8 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
       <Link href={href}>
         <Card className="overflow-hidden hover:border-accent hover:shadow-glow transition-all cursor-pointer group h-full">
-          <div className="relative aspect-video overflow-hidden">
+          <motion.div 
+            className="relative aspect-video overflow-hidden"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.4 }}
+          >
             <Image
               src={image}
               alt={title}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="absolute top-4 right-4 bg-accent text-bg p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <motion.div 
+              className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent"
+              initial={{ opacity: 0 }}
+              whileHover={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+            <motion.div 
+              className="absolute top-4 right-4 bg-accent text-bg p-2 rounded-full"
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileHover={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               <ArrowUpRight className="h-4 w-4" />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
           <CardContent className="p-6">
             <h3 className="text-xl font-bold font-heading mb-2 group-hover:text-accent transition-colors">
               {title}

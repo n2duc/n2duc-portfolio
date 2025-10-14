@@ -113,18 +113,27 @@ export const MDXComponents = {
     />
   ),
   table: (props: React.HTMLAttributes<HTMLTableElement>) => (
-    <div className="my-6 overflow-x-auto">
-      <table className="w-full border-collapse" {...props} />
+    <div className="my-8 overflow-x-auto rounded-lg border border-border">
+      <table className="w-full border-collapse text-sm" {...props} />
     </div>
+  ),
+  thead: (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
+    <thead className="bg-card" {...props} />
+  ),
+  tbody: (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
+    <tbody className="divide-y divide-border" {...props} />
+  ),
+  tr: (props: React.HTMLAttributes<HTMLTableRowElement>) => (
+    <tr className="hover:bg-card/50 transition-colors" {...props} />
   ),
   th: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
     <th
-      className="border border-border px-4 py-2 text-left font-semibold"
+      className="px-4 py-3 text-left font-semibold border-b border-border"
       {...props}
     />
   ),
   td: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-    <td className="border border-border px-4 py-2" {...props} />
+    <td className="px-4 py-3" {...props} />
   ),
 };
 

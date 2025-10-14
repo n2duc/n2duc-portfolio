@@ -193,3 +193,24 @@ html {
 .prose blockquote {
   @apply border-l-4 border-accent pl-4 italic text-muted;
 }
+
+.prose table {
+  @apply w-full text-sm;
+}
+
+.prose thead {
+  @apply bg-card;
+}
+
+.prose th {
+  @apply font-semibold text-left;
+}
+
+.prose tbody tr {
+  @apply hover:bg-card/50 transition-colors;
+}
+
+.prose td,
+.prose th {
+  @apply px-4 py-3;
+}
