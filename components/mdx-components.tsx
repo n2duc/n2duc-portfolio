@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { CodeBlock } from "@/components/code-block";
 
 interface CalloutProps {
   children: ReactNode;
@@ -107,10 +108,7 @@ export const MDXComponents = {
     return <code {...props} />;
   },
   pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
-    <pre
-      className="my-6 overflow-x-auto rounded-xl bg-[#1e1e1e] p-4 text-sm border border-border/50"
-      {...props}
-    />
+    <CodeBlock {...props} />
   ),
   table: (props: React.HTMLAttributes<HTMLTableElement>) => (
     <div className="my-8 overflow-x-auto rounded-lg border border-border">

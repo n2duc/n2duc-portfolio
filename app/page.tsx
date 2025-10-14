@@ -7,13 +7,12 @@ import { motion } from "framer-motion";
 import { Hero } from "@/components/hero";
 import { StatsSection } from "@/components/stats-section";
 import { MarqueeLogos } from "@/components/marquee-logos";
-import { ProjectCard } from "@/components/project-card";
+import { ProjectCardEnhanced } from "@/components/project-card-enhanced";
 import { ServicesSection } from "@/components/services-section";
 import { SkillCloud } from "@/components/skill-cloud";
-import { TestimonialCard } from "@/components/testimonial-card";
+import { TestimonialCarousel } from "@/components/testimonial-carousel";
 import { Section, SectionHeader } from "@/components/section";
 import { Button } from "@/components/ui/button";
-import { testimonials } from "@/lib/data";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
 // Featured projects data
@@ -23,24 +22,35 @@ const featuredProjects = [
     description:
       "A modern, high-performance e-commerce platform built with Next.js and Stripe integration. Achieved 98 Lighthouse score and increased conversions by 120%.",
     image: "/projects/ecommerce-hero.jpg",
+    images: ["/projects/ecommerce-hero.jpg"], // Can add more images later
     tags: ["Next.js", "TypeScript", "Stripe", "Tailwind CSS"],
+    stack: ["Next.js 14", "TypeScript", "Stripe API", "Tailwind CSS", "PostgreSQL", "Vercel"],
     href: "/projects/ecommerce-platform",
+    demoUrl: "https://demo-ecommerce.example.com",
+    repoUrl: "https://github.com/n2duc/ecommerce-platform",
   },
   {
     title: "Healthcare Patient Portal",
     description:
       "HIPAA-compliant patient portal with real-time appointment scheduling and secure messaging. Built with accessibility-first approach.",
     image: "/projects/healthcare-hero.jpg",
+    images: ["/projects/healthcare-hero.jpg"],
     tags: ["React", "Node.js", "PostgreSQL", "WebSocket"],
+    stack: ["React", "Node.js", "Express", "PostgreSQL", "Socket.io", "AWS"],
     href: "/projects/healthcare-portal",
+    demoUrl: "https://healthcare-demo.example.com",
   },
   {
     title: "AI-Powered Analytics Dashboard",
     description:
       "Real-time analytics dashboard with AI-driven insights. Reduced page load time by 38% through performance optimization.",
     image: "/projects/analytics-hero.jpg",
+    images: ["/projects/analytics-hero.jpg"],
     tags: ["Vue.js", "D3.js", "Python", "FastAPI"],
+    stack: ["Vue.js 3", "D3.js", "Python", "FastAPI", "TensorFlow", "Redis"],
     href: "/projects/analytics-dashboard",
+    demoUrl: "https://analytics-demo.example.com",
+    repoUrl: "https://github.com/n2duc/analytics-dashboard",
   },
 ];
 
@@ -100,7 +110,7 @@ export default function Home() {
         >
           {featuredProjects.map((project) => (
             <motion.div key={project.title} variants={staggerItem}>
-              <ProjectCard {...project} />
+              <ProjectCardEnhanced {...project} />
             </motion.div>
           ))}
         </motion.div>
@@ -138,19 +148,7 @@ export default function Home() {
           title="What People Say"
           description="Feedback from clients and colleagues I've worked with"
         />
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-        >
-          {testimonials.map((testimonial, index) => (
-            <motion.div key={testimonial.name} variants={staggerItem}>
-              <TestimonialCard {...testimonial} index={index} />
-            </motion.div>
-          ))}
-        </motion.div>
+        <TestimonialCarousel />
       </Section>
 
       {/* Latest Blog Posts Section */}

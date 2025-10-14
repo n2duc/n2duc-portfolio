@@ -8,6 +8,7 @@ import { ArrowRight, Download } from "lucide-react";
 import { siteConfig } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import { TypingAnimation } from "@/components/typing-animation";
 
 export function Hero() {
   return (
@@ -86,7 +87,14 @@ export function Hero() {
               </motion.span>
               <br />
               <span className="text-3xl md:text-5xl lg:text-6xl">
-                {siteConfig.title}
+                <TypingAnimation 
+                  texts={[
+                    "Frontend Developer",
+                    "UI/UX Enthusiast",
+                    "Problem Solver",
+                    "Creative Builder",
+                  ]} 
+                />
               </span>
             </h1>
           </motion.div>

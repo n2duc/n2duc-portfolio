@@ -98,6 +98,24 @@ h6 {
   @apply outline-2 outline-offset-2 outline-accent;
 }
 
+/* 3D Flip Card Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
 /* Skip link for accessibility */
 .skip-link {
   @apply fixed left-4 top-4 z-50 -translate-y-20 rounded-lg bg-accent px-4 py-2 text-bg font-semibold transition-transform;
@@ -213,4 +231,18 @@ html {
 .prose td,
 .prose th {
   @apply px-4 py-3;
+}
+
+/* Animated grid pattern */
+.bg-grid-pattern {
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Hide custom cursor on mobile */
+@media (max-width: 768px) {
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
 }
