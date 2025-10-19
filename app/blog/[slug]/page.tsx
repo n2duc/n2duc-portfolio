@@ -10,6 +10,7 @@ import { siteConfig } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { TableOfContents } from "@/components/table-of-contents";
 
 export async function generateStaticParams() {
   const posts = await getBlogPosts();
@@ -53,7 +54,7 @@ export default async function BlogPostPage({
     notFound();
   }
 
-  const { frontmatter, content, readingTime } = post;
+  const { frontmatter, content, headings, readingTime } = post;
 
   const blogPostSchema = generateBlogPostSchema({
     title: frontmatter.title,
@@ -82,7 +83,7 @@ export default async function BlogPostPage({
       />
 
       <article className="pt-24 pb-16">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <Button variant="ghost" asChild className="mb-8">
             <Link href="/blog">
               <ArrowLeft className="h-4 w-4" />
@@ -90,43 +91,62 @@ export default async function BlogPostPage({
             </Link>
           </Button>
 
-          <header className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">
-              {frontmatter.title}
-            </h1>
+          <div className="lg:grid lg:grid-cols-[1fr_250px] lg:gap-12 xl:gap-16">
+            {/* Main Content */}
+            <div className="min-w-0">
+              <header className="mb-8">
+                <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">
+                  {frontmatter.title}
+                </h1>
 
-            <div className="flex flex-wrap gap-4 text-sm text-muted mb-6">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <time dateTime={frontmatter.date}>
-                  {formatDate(frontmatter.date)}
-                </time>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                {readingTime} min read
-              </div>
+                <div className="flex flex-wrap gap-4 text-sm text-muted mb-6">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <time dateTime={frontmatter.date}>
+                      {formatDate(frontmatter.date)}
+                    </time>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {readingTime} min read
+                  </div>
+                </div>
+
+                <p className="text-xl text-muted mb-6">
+                  {frontmatter.description}
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {frontmatter.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-card rounded-full text-sm border border-border"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </header>
+
+              <Separator className="my-8" />
+
+              {/* Mobile TOC - Shown before content on mobile */}
+              {headings.length > 0 && (
+                <div className="lg:hidden mb-8 p-4 bg-card rounded-lg border border-border">
+                  <TableOfContents items={headings} />
+                </div>
+              )}
+
+              <div className="prose prose-lg max-w-none">{content}</div>
             </div>
 
-            <p className="text-xl text-muted mb-6">
-              {frontmatter.description}
-            </p>
-
-            <div className="flex flex-wrap gap-2">
-              {frontmatter.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-card rounded-full text-sm border border-border"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </header>
-
-          <Separator className="my-8" />
-
-          <div className="prose prose-lg max-w-none">{content}</div>
+            {/* Table of Contents - Sidebar on desktop */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto">
+                <TableOfContents items={headings} />
+              </div>
+            </aside>
+          </div>
         </div>
       </article>
     </>

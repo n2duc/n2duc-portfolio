@@ -5,9 +5,35 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import remarkGfm from "remark-gfm";
 import { MDXComponents } from "@/components/mdx-components";
+import { TOCItem } from "@/components/table-of-contents";
 
 const contentDirectory = path.join(process.cwd(), "content");
+
+// Helper function to extract headings from MDX content
+function extractHeadings(content: string): TOCItem[] {
+  const headingRegex = /^(#{2,3})\s+(.+)$/gm;
+  const headings: TOCItem[] = [];
+  let match;
+
+  while ((match = headingRegex.exec(content)) !== null) {
+    const level = match[1].length;
+    const text = match[2].trim();
+    const id = text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    headings.push({
+      id,
+      text,
+      level,
+    });
+  }
+
+  return headings;
+}
 
 export interface ProjectFrontmatter {
   title: string;
@@ -77,6 +103,7 @@ export async function getProjectBySlug(slug: string) {
     options: {
       parseFrontmatter: true,
       mdxOptions: {
+        remarkPlugins: [remarkGfm],
         rehypePlugins: [
           rehypeHighlight,
           rehypeSlug,
@@ -140,6 +167,7 @@ export async function getBlogPostBySlug(slug: string) {
     options: {
       parseFrontmatter: true,
       mdxOptions: {
+        remarkPlugins: [remarkGfm],
         rehypePlugins: [
           rehypeHighlight,
           rehypeSlug,
@@ -149,10 +177,13 @@ export async function getBlogPostBySlug(slug: string) {
     },
   });
 
+  const headings = extractHeadings(content);
+
   return {
     slug,
     frontmatter: data as BlogFrontmatter,
     content: mdxContent,
+    headings,
     readingTime: Math.ceil(content.split(/\s+/).length / 200),
   };
 }

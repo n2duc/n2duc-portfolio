@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Command } from "lucide-react";
 
 import { siteConfig } from "@/lib/data";
 import { cn } from "@/lib/utils";
@@ -24,12 +24,14 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
+  const [isMac, setIsMac] = React.useState(false);
   const { scrollY } = useScroll();
   const { theme } = useTheme();
   
   // Prevent hydration mismatch by only using theme after mount
   React.useEffect(() => {
     setMounted(true);
+    setIsMac(navigator?.platform?.includes("Mac") || false);
   }, []);
 
   const headerBackgroundLight = useTransform(
@@ -95,7 +97,31 @@ export function SiteHeader() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Command Palette Trigger */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden md:flex items-center gap-2 h-9 px-3 text-sm text-muted hover:text-fg hover:border-accent transition-colors"
+              onClick={() => {
+                // Trigger Cmd/Ctrl + K event
+                window.dispatchEvent(
+                  new KeyboardEvent("keydown", {
+                    key: "k",
+                    metaKey: true,
+                    ctrlKey: true,
+                  })
+                );
+              }}
+            >
+              <Command className="h-4 w-4" />
+              <span className="hidden lg:inline">Search</span>
+              <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-card px-1.5 font-mono text-[10px] font-medium opacity-100">
+                <span className="text-xs">{isMac ? "⌘" : "Ctrl"}</span>K
+              </kbd>
+            </Button>
+            
             <ThemeToggle />
+            
             <Button
               variant="ghost"
               size="icon"

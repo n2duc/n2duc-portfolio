@@ -118,6 +118,22 @@ type ApiEndpoint = `${HttpMethod} ${Endpoint}`;
 
 ## Utility Types You Should Know
 
+TypeScript provides many built-in utility types to help transform types. Here's a comparison of the most commonly used ones:
+
+| Utility Type | Purpose | Example Usage |
+|-------------|---------|---------------|
+| `Partial<T>` | Makes all properties optional | `Partial<User>` → all fields optional |
+| `Required<T>` | Makes all properties required | `Required<PartialUser>` → all fields required |
+| `Readonly<T>` | Makes all properties readonly | `Readonly<Config>` → immutable object |
+| `Pick<T, K>` | Select specific properties | `Pick<User, 'id' \| 'name'>` → only id and name |
+| `Omit<T, K>` | Remove specific properties | `Omit<User, 'password'>` → all except password |
+| `Record<K, T>` | Create object type with keys | `Record<string, number>` → string keys, number values |
+| `Exclude<T, U>` | Remove types from union | `Exclude<'a' \| 'b' \| 'c', 'a'>` → 'b' \| 'c' |
+| `Extract<T, U>` | Extract types from union | `Extract<'a' \| 'b', 'a'>` → 'a' |
+| `NonNullable<T>` | Remove null and undefined | `NonNullable<string \| null>` → string |
+| `ReturnType<T>` | Extract function return type | `ReturnType<typeof myFunc>` |
+| `Parameters<T>` | Extract function parameters | `Parameters<typeof myFunc>` |
+
 ### ReturnType and Parameters
 
 ```typescript

@@ -4,27 +4,37 @@ import { motion } from "framer-motion";
 import { stats } from "@/lib/data";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { Section } from "@/components/section";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 
 export function StatsSection() {
   return (
     <Section className="border-y border-border bg-card/30">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {stats.map((stat, index) => (
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-3 gap-8"
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+      >
+        {stats.map((stat) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            viewport={{ once: true }}
-            className="text-center"
+            variants={staggerItem}
+            whileHover={{ scale: 1.05, y: -5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="text-center p-6 rounded-xl bg-card/50 hover:bg-card border border-transparent hover:border-accent/30 transition-colors"
           >
-            <div className="text-4xl md:text-5xl font-bold font-heading text-accent mb-2">
+            <motion.div 
+              className="text-4xl md:text-5xl font-bold font-heading text-accent mb-2"
+              whileHover={{ scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
               <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-            </div>
+            </motion.div>
             <div className="text-sm md:text-base text-muted">{stat.label}</div>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </Section>
   );
 }

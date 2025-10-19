@@ -6,6 +6,10 @@ import "./syntax-highlighting.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { CursorEffects } from "@/components/cursor-effects";
+import { ScrollProgress } from "@/components/scroll-progress";
+import { CommandPalette } from "@/components/command-palette";
+import { AnimatedBackground } from "@/components/animated-background";
 import { generateSEO } from "@/lib/seo";
 import { generatePersonSchema } from "@/lib/schema";
 
@@ -48,6 +52,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AnimatedBackground />
+          <CursorEffects />
+          <ScrollProgress />
+          <CommandPalette />
+          
           <a href="#main-content" className="skip-link">
             Skip to main content
           </a>

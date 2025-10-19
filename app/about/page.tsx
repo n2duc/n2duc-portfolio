@@ -8,6 +8,8 @@ import { siteConfig } from "@/lib/data";
 import { Section, SectionHeader } from "@/components/section";
 import { Timeline, TimelineItem } from "@/components/timeline";
 import { Button } from "@/components/ui/button";
+import { LocationGlobe } from "@/components/location-globe";
+import { SkillVisualization } from "@/components/skill-visualization";
 
 export const metadata: Metadata = generateSEO({
   title: "About",
@@ -113,10 +115,26 @@ export default function AboutPage() {
 
       <Section className="bg-card/30">
         <SectionHeader
+          title="Based in Da Nang, Vietnam"
+          description="Working remotely and collaborating with teams worldwide"
+        />
+        <LocationGlobe />
+      </Section>
+
+      <Section>
+        <SectionHeader
           title="My Journey"
           description="Key milestones in my career and education"
         />
         <Timeline items={timelineItems} />
+      </Section>
+
+      <Section className="bg-card/30">
+        <SectionHeader
+          title="Skills & Expertise"
+          description="Technologies and tools I work with daily"
+        />
+        <SkillVisualization />
       </Section>
 
       <Section>
